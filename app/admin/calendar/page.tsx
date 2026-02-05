@@ -1,42 +1,256 @@
-import { redirect } from "next/navigation";
-import { getUserRole } from "@/lib/auth/roles";
-import { UserRole } from "@/lib/types/roles";
+"use client";
+
+import { useState, useEffect } from "react";
+import { CalendarView } from "@/components/calendar-view";
+import { EventList } from "@/components/event-list";
+import { EventFormDialog } from "@/components/event-form-dialog";
+import { Button } from "@/components/ui/button";
+import { Plus, Calendar, List } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface CalendarEvent {
+  id: string;
+  task_name: string;
+  requester_source: string;
+  due_date: string;
+  status: string;
+  priority: string;
+  assignee_id?: string;
+  assignee?: { id: string; email: string };
+  linked_objective?: string;
+  estimated_time?: number;
+  description?: string;
+  overdue_toggle: boolean;
+  overdue_days?: number;
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface Admin {
+  id: string;
+  email: string;
+}
 
 export default function CalendarPage() {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<
+    CalendarEvent | undefined
+  >();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEvents();
+    fetchAdmins();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch("/api/calendar-events");
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAdmins = async () => {
+    try {
+      const response = await fetch("/api/admins");
+      if (response.ok) {
+        const data = await response.json();
+        setAdmins(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch admins:", error);
+    }
+  };
+
+  const handleCreateEvent = async (eventData: any) => {
+    try {
+      const response = await fetch("/api/calendar-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eventData),
+      });
+
+      if (response.ok) {
+        await fetchEvents();
+        setIsDialogOpen(false);
+        setSelectedEvent(undefined);
+      }
+    } catch (error) {
+      console.error("Failed to create event:", error);
+    }
+  };
+
+  const handleUpdateEvent = async (eventData: any) => {
+    if (!selectedEvent) return;
+
+    try {
+      const response = await fetch(`/api/calendar-events/${selectedEvent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eventData),
+      });
+
+      if (response.ok) {
+        await fetchEvents();
+        setIsDialogOpen(false);
+        setSelectedEvent(undefined);
+      }
+    } catch (error) {
+      console.error("Failed to update event:", error);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this event?")) return;
+
+    try {
+      const response = await fetch(`/api/calendar-events/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchEvents();
+      }
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+    }
+  };
+
+  const handleDateClick = (date: Date) => {
+    setSelectedEvent(undefined);
+    setSelectedDate(date);
+    setIsDialogOpen(true);
+  };
+
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditEvent = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setIsDialogOpen(true);
+  };
+
+  const filteredEvents =
+    statusFilter === "all"
+      ? events
+      : events.filter((e) => e.status === statusFilter);
+
   return (
-    <div className="flex-1 w-full flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold">Calendar</h1>
-        <p className="text-muted-foreground mt-2">
-          Schedule and manage appointments
-        </p>
+    <div className="flex-1 w-full flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Admin Calendar</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage tasks and events for the admin team
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setSelectedEvent(undefined);
+            setSelectedDate(undefined);
+            setIsDialogOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Event
+        </Button>
       </div>
 
-      <div className="border rounded-lg p-8 text-center">
-        <div className="max-w-md mx-auto">
-          <h3 className="text-lg font-semibold mb-2">Calendar Coming Soon</h3>
-          <p className="text-muted-foreground">
-            The calendar feature will be available here. You'll be able to
-            schedule appointments, view upcoming events, and manage your
-            schedule.
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === "calendar" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("calendar")}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Calendar
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="h-4 w-4 mr-2" />
+            List
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Filter by status:
+          </span>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="To Do">To Do</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+              <SelectItem value="Blocked">Blocked</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border rounded-lg p-6">
-          <h3 className="font-semibold text-lg mb-2">Upcoming Events</h3>
-          <p className="text-muted-foreground text-sm">
-            No upcoming events scheduled.
-          </p>
+      {loading ? (
+        <div className="text-center py-12 text-muted-foreground">
+          Loading calendar...
         </div>
-        <div className="border rounded-lg p-6">
-          <h3 className="font-semibold text-lg mb-2">Recent Activity</h3>
-          <p className="text-muted-foreground text-sm">
-            No recent calendar activity.
-          </p>
-        </div>
-      </div>
+      ) : (
+        <>
+          {viewMode === "calendar" ? (
+            <CalendarView
+              events={filteredEvents}
+              onDateClick={handleDateClick}
+              onEventClick={handleEventClick}
+            />
+          ) : (
+            <EventList
+              events={filteredEvents}
+              onEdit={handleEditEvent}
+              onDelete={handleDeleteEvent}
+            />
+          )}
+        </>
+      )}
+
+      <EventFormDialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setSelectedDate(undefined);
+          }
+        }}
+        onSubmit={selectedEvent ? handleUpdateEvent : handleCreateEvent}
+        event={selectedEvent}
+        selectedDate={selectedDate}
+        admins={admins}
+      />
     </div>
   );
 }

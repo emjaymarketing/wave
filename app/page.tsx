@@ -62,7 +62,16 @@ export default function Home() {
               <h1 className="text-5xl lg:text-7xl font-semibold tracking-tight leading-tight mb-6 text-black animate-fade-in">
                 Marketing that delivers.
                 <br />
-                <span className="[color:#FFDBAB]">Every time.</span>
+                <span
+                  className="
+                    [color:#FFDB95]
+                    [-webkit-text-stroke:3px_black]
+                    [-webkit-text-fill-color:#FFDB95]
+                    [paint-order:stroke_fill]
+                  "
+                >
+                  Every time.
+                </span>
               </h1>
               <div className="mt-16 w-full max-w-4xl mx-auto">
                 <video autoPlay loop muted playsInline className="w-full">
