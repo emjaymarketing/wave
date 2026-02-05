@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 export function SignUpForm({
@@ -26,6 +26,9 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+  const isAdminInvite = inviteToken !== null;
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,14 +43,40 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // Validate admin invite token if present
+      if (isAdminInvite) {
+        const response = await fetch("/api/validate-invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: inviteToken }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Invalid invite token");
+        }
+      }
+
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
+          data: {
+            admin_invite: isAdminInvite ? "true" : "false",
+          },
         },
       });
       if (error) throw error;
+
+      // If admin invite, ensure role is set to admin
+      if (isAdminInvite && signUpData.user) {
+        await fetch("/api/setup-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: signUpData.user.id }),
+        });
+      }
+
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -61,7 +90,11 @@ export function SignUpForm({
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardDescription>
+            {isAdminInvite
+              ? "Create a new admin account"
+              : "Create a new account"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>

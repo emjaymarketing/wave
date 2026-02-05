@@ -47,16 +47,44 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
+  const pathname = request.nextUrl.pathname;
+
+  // Redirect unauthenticated users trying to access protected routes
   if (
-    request.nextUrl.pathname !== "/" &&
     !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
+    (pathname.startsWith("/admin") ||
+      pathname.startsWith("/client") ||
+      pathname.startsWith("/protected"))
   ) {
-    // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
+  }
+
+  // Role-based redirects for authenticated users
+  if (
+    user &&
+    (pathname.startsWith("/admin") || pathname.startsWith("/client"))
+  ) {
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.sub)
+      .single();
+
+    // Prevent clients from accessing admin routes
+    if (pathname.startsWith("/admin") && roleData?.role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/client";
+      return NextResponse.redirect(url);
+    }
+
+    // Redirect admins from client routes to admin dashboard
+    if (pathname.startsWith("/client") && roleData?.role === "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
