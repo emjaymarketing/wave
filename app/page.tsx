@@ -1,41 +1,14 @@
 import { AuthButton } from "@/components/auth-button";
-import { createClient } from "@/lib/supabase/server";
+import { DashboardButton } from "@/components/dashboard-button";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 
-async function AuthRedirect() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (roleData?.role === "admin") {
-      redirect("/admin");
-    } else if (roleData?.role === "client") {
-      redirect("/client");
-    }
-  }
-
-  return null;
-}
-
 export default function Home() {
   return (
     <>
-      <Suspense fallback={null}>
-        <AuthRedirect />
-      </Suspense>
       <div className="min-h-screen bg-white text-black">
         <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-black/5 z-50">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -49,9 +22,14 @@ export default function Home() {
                   priority
                 />
               </Link>
-              <Suspense>
-                <AuthButton />
-              </Suspense>
+              <div className="flex items-center gap-3">
+                <Suspense>
+                  <DashboardButton />
+                </Suspense>
+                <Suspense>
+                  <AuthButton />
+                </Suspense>
+              </div>
             </div>
           </div>
         </nav>
