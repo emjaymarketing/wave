@@ -34,7 +34,9 @@ export default function AdminLayout({
         </div>
       </nav>
       <div className="flex flex-1">
-        <AdminSidebar />
+        <Suspense>
+          <AdminSidebar />
+        </Suspense>
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">{children}</div>
         </main>
