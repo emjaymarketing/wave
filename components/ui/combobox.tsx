@@ -52,15 +52,15 @@ export function Combobox({
                   (option) => option.value === value,
                 );
                 return selected ? (
-                  <span className="flex items-center gap-2 truncate">
+                  <span className="flex items-center truncate">
                     {selected.avatarUrl && (
                       <img
                         src={selected.avatarUrl}
                         alt=""
-                        className="h-5 w-5 rounded-full object-cover shrink-0"
+                        className="h-5 w-5 rounded-full object-cover shrink-0 mr-2"
                       />
                     )}
-                    {selected.label}
+                    <span>{selected.label}</span>
                   </span>
                 ) : (
                   placeholder
@@ -95,7 +95,7 @@ export function Combobox({
                     <img
                       src={option.avatarUrl}
                       alt=""
-                      className="h-5 w-5 rounded-full object-cover shrink-0"
+                      className="h-5 w-5 rounded-full object-cover shrink-0 mr-1.5"
                     />
                   )}
                   {option.label}
