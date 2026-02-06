@@ -17,12 +17,23 @@ import {
 interface CalendarEvent {
   id: string;
   task_name: string;
-  requester_source: string;
+  assigned_client_id?: string;
+  assigned_client?: {
+    id: string;
+    email: string;
+    full_name: string;
+    avatar_url?: string;
+  };
   due_date: string;
   status: string;
   priority: string;
   assignee_id?: string;
-  assignee?: { id: string; email: string };
+  assignee?: {
+    id: string;
+    email: string;
+    full_name: string;
+    avatar_url?: string;
+  };
   linked_objective?: string;
   estimated_time?: number;
   description?: string;
@@ -36,11 +47,14 @@ interface CalendarEvent {
 interface Admin {
   id: string;
   email: string;
+  full_name: string;
+  avatar_url?: string;
 }
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
+  const [clients, setClients] = useState<Admin[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<
     CalendarEvent | undefined
@@ -53,6 +67,7 @@ export default function CalendarPage() {
   useEffect(() => {
     fetchEvents();
     fetchAdmins();
+    fetchClients();
   }, []);
 
   const fetchEvents = async () => {
@@ -78,6 +93,18 @@ export default function CalendarPage() {
       }
     } catch (error) {
       console.error("Failed to fetch admins:", error);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const response = await fetch("/api/clients");
+      if (response.ok) {
+        const data = await response.json();
+        setClients(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch clients:", error);
     }
   };
 
@@ -250,6 +277,7 @@ export default function CalendarPage() {
         event={selectedEvent}
         selectedDate={selectedDate}
         admins={admins}
+        clients={clients}
       />
     </div>
   );

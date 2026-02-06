@@ -18,10 +18,17 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  // Query user_roles and try to get user emails from auth schema
   const { data: userRoles, error: rolesError } = await supabase
     .from("user_roles")
-    .select("user_id")
-    .eq("role", "admin");
+    .select(
+      `
+      user_id,
+      created_at
+    `,
+    )
+    .eq("role", "client")
+    .order("created_at", { ascending: false });
 
   if (rolesError) {
     return NextResponse.json({ error: rolesError.message }, { status: 500 });
@@ -46,7 +53,7 @@ export async function GET() {
     });
   }
 
-  const admins = userRoles.map((ur) => {
+  const clients = userRoles.map((ur) => {
     const userDetail = userMap[ur.user_id];
     return {
       id: ur.user_id,
@@ -54,11 +61,11 @@ export async function GET() {
         userDetail?.email ||
         (ur.user_id === currentUser.id
           ? currentUser.email
-          : `Admin ${ur.user_id.slice(0, 8)}`),
+          : `Client ${ur.user_id.slice(0, 8)}`),
       full_name: userDetail?.full_name || "Unknown User",
       avatar_url: userDetail?.avatar_url || null,
     };
   });
 
-  return NextResponse.json(admins);
+  return NextResponse.json(clients);
 }

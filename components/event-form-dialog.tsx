@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 
 interface EventFormDialogProps {
   open: boolean;
@@ -26,7 +27,18 @@ interface EventFormDialogProps {
   onSubmit: (event: any) => void;
   event?: any;
   selectedDate?: Date;
-  admins: Array<{ id: string; email: string }>;
+  admins: Array<{
+    id: string;
+    email: string;
+    full_name: string;
+    avatar_url?: string;
+  }>;
+  clients: Array<{
+    id: string;
+    email: string;
+    full_name: string;
+    avatar_url?: string;
+  }>;
 }
 
 export function EventFormDialog({
@@ -36,10 +48,11 @@ export function EventFormDialog({
   event,
   selectedDate,
   admins,
+  clients,
 }: EventFormDialogProps) {
   const [formData, setFormData] = useState({
     task_name: "",
-    requester_source: "",
+    assigned_client_id: "",
     due_date: "",
     due_time: "",
     status: "To Do",
@@ -55,7 +68,7 @@ export function EventFormDialog({
       const eventDate = new Date(event.due_date);
       setFormData({
         task_name: event.task_name || "",
-        requester_source: event.requester_source || "",
+        assigned_client_id: event.assigned_client_id || "",
         due_date: eventDate.toISOString().slice(0, 10),
         due_time: eventDate.toTimeString().slice(0, 5),
         status: event.status || "To Do",
@@ -68,7 +81,7 @@ export function EventFormDialog({
     } else if (selectedDate) {
       setFormData({
         task_name: "",
-        requester_source: "",
+        assigned_client_id: "",
         due_date: selectedDate.toISOString().slice(0, 10),
         due_time: "09:00",
         status: "To Do",
@@ -81,7 +94,7 @@ export function EventFormDialog({
     } else {
       setFormData({
         task_name: "",
-        requester_source: "",
+        assigned_client_id: "",
         due_date: "",
         due_time: "09:00",
         status: "To Do",
@@ -99,7 +112,7 @@ export function EventFormDialog({
     const dueDateTimeString = `${formData.due_date}T${formData.due_time}:00`;
     const submitData = {
       task_name: formData.task_name,
-      requester_source: formData.requester_source,
+      assigned_client_id: formData.assigned_client_id || null,
       due_date: new Date(dueDateTimeString).toISOString(),
       status: formData.status,
       priority: formData.priority,
@@ -135,16 +148,21 @@ export function EventFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="requester_source">
-                Requester/Source <span className="text-red-500">*</span>
+              <Label htmlFor="assigned_client_id">
+                Assigned Client <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="requester_source"
-                value={formData.requester_source}
-                onChange={(e) =>
-                  setFormData({ ...formData, requester_source: e.target.value })
+              <Combobox
+                options={clients.map((client) => ({
+                  value: client.id,
+                  label: client.full_name,
+                }))}
+                value={formData.assigned_client_id}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, assigned_client_id: value })
                 }
-                required
+                placeholder="Select a client..."
+                searchPlaceholder="Search clients..."
+                emptyText="No clients found."
               />
             </div>
           </div>
@@ -245,7 +263,7 @@ export function EventFormDialog({
                 <SelectContent>
                   {admins.map((admin) => (
                     <SelectItem key={admin.id} value={admin.id}>
-                      {admin.email}
+                      {admin.full_name}
                     </SelectItem>
                   ))}
                 </SelectContent>

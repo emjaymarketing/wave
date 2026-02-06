@@ -10,12 +10,23 @@ import { cn } from "@/lib/utils";
 interface Event {
   id: string;
   task_name: string;
-  requester_source: string;
+  assigned_client_id?: string;
+  assigned_client?: {
+    id: string;
+    email: string;
+    full_name: string;
+    avatar_url?: string;
+  };
   due_date: string;
   status: string;
   priority: string;
   assignee_id?: string;
-  assignee?: { id: string; email: string };
+  assignee?: {
+    id: string;
+    email: string;
+    full_name: string;
+    avatar_url?: string;
+  };
   linked_objective?: string;
   estimated_time?: number;
   description?: string;
@@ -87,12 +98,12 @@ export function EventList({ events, onEdit, onDelete }: EventListProps) {
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>Requested by: {event.requester_source}</span>
+                    {event.assigned_client && (
+                      <span>Client: {event.assigned_client.full_name}</span>
+                    )}
+                    {event.assignee && event.assigned_client && <span>•</span>}
                     {event.assignee && (
-                      <>
-                        <span>•</span>
-                        <span>Assigned to: {event.assignee.email}</span>
-                      </>
+                      <span>Assigned to: {event.assignee.full_name}</span>
                     )}
                   </div>
                 </div>

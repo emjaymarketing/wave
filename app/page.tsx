@@ -57,8 +57,8 @@ export default function Home() {
         </nav>
 
         <main className="pt-16">
-          <section className="px-6 lg:px-8 py-24 lg:py-32">
-            <div className="max-w-4xl mx-auto text-center">
+          <section className="py-24 lg:py-32">
+            <div className="max-w-4xl mx-auto text-center px-6 lg:px-8">
               <h1 className="text-5xl lg:text-7xl font-semibold tracking-tight leading-tight mb-6 text-black animate-fade-in">
                 Marketing that delivers.
                 <br />
@@ -73,11 +73,6 @@ export default function Home() {
                   Every time.
                 </span>
               </h1>
-              <div className="mt-16 w-full max-w-4xl mx-auto">
-                <video autoPlay loop muted playsInline className="w-full">
-                  <source src="/wave-vid.mp4" type="video/mp4" />
-                </video>
-              </div>
               <p className="text-xl lg:text-2xl text-black/60 mb-12 max-w-2xl mx-auto leading-relaxed">
                 Wave removes the friction from marketing execution. Clear
                 processes, fast timelines, and consistently high standards.
@@ -97,6 +92,11 @@ export default function Home() {
                   Start With a First Project
                 </Button>
               </div>
+            </div>
+            <div className="mt-16 w-full">
+              <video autoPlay loop muted playsInline className="w-full block">
+                <source src="/wave-graphic.mp4" type="video/mp4" />
+              </video>
             </div>
           </section>
 

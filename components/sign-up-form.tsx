@@ -23,6 +23,9 @@ export function SignUpForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -56,6 +59,7 @@ export function SignUpForm({
         }
       }
 
+      // First, sign up the user
       const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
@@ -63,10 +67,27 @@ export function SignUpForm({
           emailRedirectTo: `${window.location.origin}/protected`,
           data: {
             admin_invite: isAdminInvite ? "true" : "false",
+            full_name: fullName,
           },
         },
       });
       if (error) throw error;
+
+      // Upload avatar via server-side API (client isn't authenticated yet)
+      if (avatarFile && signUpData.user) {
+        try {
+          const formData = new FormData();
+          formData.append("user_id", signUpData.user.id);
+          formData.append("avatar", avatarFile);
+
+          await fetch("/api/create-profile", {
+            method: "POST",
+            body: formData,
+          });
+        } catch (avatarError) {
+          console.error("Error uploading avatar:", avatarError);
+        }
+      }
 
       // If admin invite, ensure role is set to admin
       if (isAdminInvite && signUpData.user) {
@@ -99,6 +120,45 @@ export function SignUpForm({
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
+              <div className="grid gap-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="John Doe"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="avatar">Profile Photo (Optional)</Label>
+                <Input
+                  id="avatar"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setAvatarFile(file);
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setAvatarPreview(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                {avatarPreview && (
+                  <div className="mt-2">
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                    />
+                  </div>
+                )}
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
