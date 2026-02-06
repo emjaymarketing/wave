@@ -52,9 +52,7 @@ export async function updateSession(request: NextRequest) {
   // Redirect unauthenticated users trying to access protected routes
   if (
     !user &&
-    (pathname.startsWith("/admin") ||
-      pathname.startsWith("/client") ||
-      pathname.startsWith("/protected"))
+    (pathname.startsWith("/admin") || pathname.startsWith("/client"))
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";

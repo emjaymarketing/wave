@@ -13,48 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface CalendarEvent {
-  id: string;
-  task_name: string;
-  assigned_client_id?: string;
-  assigned_client?: {
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string;
-  };
-  due_date: string;
-  status: string;
-  priority: string;
-  assignee_id?: string;
-  assignee?: {
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string;
-  };
-  linked_objective?: string;
-  estimated_time?: number;
-  description?: string;
-  overdue_toggle: boolean;
-  overdue_days?: number;
-  created_by?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface Admin {
-  id: string;
-  email: string;
-  full_name: string;
-  avatar_url?: string;
-}
+import { CalendarEvent, UserDetail } from "@/lib/types/calendar";
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [admins, setAdmins] = useState<Admin[]>([]);
-  const [clients, setClients] = useState<Admin[]>([]);
+  const [admins, setAdmins] = useState<UserDetail[]>([]);
+  const [clients, setClients] = useState<UserDetail[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<
     CalendarEvent | undefined

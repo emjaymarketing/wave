@@ -79,45 +79,5 @@ CREATE TRIGGER set_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
 
--- Function to get user details including profile
-CREATE OR REPLACE FUNCTION public.get_user_details(user_ids UUID[])
-RETURNS TABLE (id UUID, email TEXT, full_name TEXT, avatar_url TEXT)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    au.id, 
-    au.email::TEXT,
-    COALESCE(up.full_name, 'Unknown User') as full_name,
-    up.avatar_url
-  FROM auth.users au
-  LEFT JOIN public.user_profiles up ON au.id = up.user_id
-  WHERE au.id = ANY(user_ids);
-END;
-$$;
-
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION public.get_user_details(UUID[]) TO authenticated;
-
--- Function to automatically create user profile on signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.user_profiles (user_id, full_name, avatar_url)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', 'User'),
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to create profile when user signs up
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
+-- Note: get_user_details function, handle_new_user trigger, and backfill
+-- are in migration 007_add_profile_trigger.sql

@@ -38,61 +38,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const {
-    data: { user: currentUser },
-  } = await supabase.auth.getUser();
-
-  // Get all unique user IDs from events
+  // Collect all user IDs referenced in events
   const allUserIds = new Set<string>();
   data.forEach((event) => {
     if (event.assignee_id) allUserIds.add(event.assignee_id);
     if (event.assigned_client_id) allUserIds.add(event.assigned_client_id);
   });
 
-  // Fetch user details for all users
-  let userDetailsMap: Record<string, any> = {};
+  // Fetch user details in one batch
+  const userMap: Record<string, any> = {};
   if (allUserIds.size > 0) {
     const { data: userDetails } = await supabase.rpc("get_user_details", {
       user_ids: Array.from(allUserIds),
     });
-
     if (userDetails) {
-      userDetails.forEach((user: any) => {
-        userDetailsMap[user.id] = user;
+      userDetails.forEach((u: any) => {
+        userMap[u.id] = u;
       });
     }
   }
 
   const eventsWithDetails = data.map((event) => ({
     ...event,
-    assignee: event.assignee_id
-      ? {
-          id: event.assignee_id,
-          email:
-            userDetailsMap[event.assignee_id]?.email ||
-            (event.assignee_id === currentUser?.id && currentUser?.email
-              ? currentUser.email
-              : `Admin ${event.assignee_id.slice(0, 8)}`),
-          full_name:
-            userDetailsMap[event.assignee_id]?.full_name || "Unknown User",
-          avatar_url: userDetailsMap[event.assignee_id]?.avatar_url || null,
-        }
-      : undefined,
-    assigned_client: event.assigned_client_id
-      ? {
-          id: event.assigned_client_id,
-          email:
-            userDetailsMap[event.assigned_client_id]?.email ||
-            (event.assigned_client_id === currentUser?.id && currentUser?.email
-              ? currentUser.email
-              : `Client ${event.assigned_client_id.slice(0, 8)}`),
-          full_name:
-            userDetailsMap[event.assigned_client_id]?.full_name ||
-            "Unknown User",
-          avatar_url:
-            userDetailsMap[event.assigned_client_id]?.avatar_url || null,
-        }
-      : undefined,
+    assignee:
+      event.assignee_id && userMap[event.assignee_id]
+        ? userMap[event.assignee_id]
+        : undefined,
+    assigned_client:
+      event.assigned_client_id && userMap[event.assigned_client_id]
+        ? userMap[event.assigned_client_id]
+        : undefined,
     overdue_toggle:
       event.due_date < new Date().toISOString() && event.status !== "Completed",
     overdue_days: calculateOverdueDays(event.due_date, event.status),

@@ -6,37 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Pencil, Trash2, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Event {
-  id: string;
-  task_name: string;
-  assigned_client_id?: string;
-  assigned_client?: {
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string;
-  };
-  due_date: string;
-  status: string;
-  priority: string;
-  assignee_id?: string;
-  assignee?: {
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string;
-  };
-  linked_objective?: string;
-  estimated_time?: number;
-  description?: string;
-  overdue_toggle: boolean;
-  overdue_days?: number;
-}
+import { CalendarEvent } from "@/lib/types/calendar";
 
 interface EventListProps {
-  events: Event[];
-  onEdit: (event: Event) => void;
+  events: CalendarEvent[];
+  onEdit: (event: CalendarEvent) => void;
   onDelete: (id: string) => void;
 }
 

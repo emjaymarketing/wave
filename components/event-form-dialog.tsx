@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
+import { UserDetail } from "@/lib/types/calendar";
 
 interface EventFormDialogProps {
   open: boolean;
@@ -27,18 +28,8 @@ interface EventFormDialogProps {
   onSubmit: (event: any) => void;
   event?: any;
   selectedDate?: Date;
-  admins: Array<{
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string;
-  }>;
-  clients: Array<{
-    id: string;
-    email: string;
-    full_name: string;
-    avatar_url?: string;
-  }>;
+  admins: UserDetail[];
+  clients: UserDetail[];
 }
 
 export function EventFormDialog({
@@ -155,6 +146,7 @@ export function EventFormDialog({
                 options={clients.map((client) => ({
                   value: client.id,
                   label: client.full_name,
+                  avatarUrl: client.avatar_url,
                 }))}
                 value={formData.assigned_client_id}
                 onValueChange={(value) =>

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/popover";
 
 interface ComboboxProps {
-  options: Array<{ value: string; label: string }>;
+  options: Array<{ value: string; label: string; avatarUrl?: string | null }>;
   value?: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
@@ -47,7 +47,25 @@ export function Combobox({
           className="w-full justify-between"
         >
           {value
-            ? options.find((option) => option.value === value)?.label
+            ? (() => {
+                const selected = options.find(
+                  (option) => option.value === value,
+                );
+                return selected ? (
+                  <span className="flex items-center gap-2 truncate">
+                    {selected.avatarUrl && (
+                      <img
+                        src={selected.avatarUrl}
+                        alt=""
+                        className="h-5 w-5 rounded-full object-cover shrink-0"
+                      />
+                    )}
+                    {selected.label}
+                  </span>
+                ) : (
+                  placeholder
+                );
+              })()
             : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -73,6 +91,13 @@ export function Combobox({
                       value === option.value ? "opacity-100" : "opacity-0",
                     )}
                   />
+                  {option.avatarUrl && (
+                    <img
+                      src={option.avatarUrl}
+                      alt=""
+                      className="h-5 w-5 rounded-full object-cover shrink-0"
+                    />
+                  )}
                   {option.label}
                 </CommandItem>
               ))}

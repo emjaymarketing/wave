@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -8,29 +8,27 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Update user role to admin
-    const { error } = await supabase
-      .from("user_roles")
-      .upsert(
-        { 
-          user_id: userId, 
-          role: "admin",
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: "user_id" }
-      );
+    const { error } = await supabase.from("user_roles").upsert(
+      {
+        user_id: userId,
+        role: "admin",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
 
     if (error) {
       console.error("Error setting admin role:", error);
       return NextResponse.json(
         { error: "Failed to set admin role" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -39,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.error("Error in setup-admin:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

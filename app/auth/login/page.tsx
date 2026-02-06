@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/login-form";
+import { Suspense } from "react";
 import Image from "next/image";
 
 export default function Page() {
@@ -15,7 +16,9 @@ export default function Page() {
             className="object-contain"
           />
         </div>
-        <LoginForm />
+        <Suspense fallback={<div className="text-center">Loading...</div>}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );

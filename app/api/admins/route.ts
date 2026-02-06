@@ -1,22 +1,14 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { getUserRole } from "@/lib/auth/roles";
 
 export async function GET() {
-  const supabase = await createClient();
-
   const role = await getUserRole();
   if (role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const {
-    data: { user: currentUser },
-  } = await supabase.auth.getUser();
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const supabase = createAdminClient();
 
   const { data: userRoles, error: rolesError } = await supabase
     .from("user_roles")
@@ -31,34 +23,17 @@ export async function GET() {
     return NextResponse.json([]);
   }
 
-  // Use the database function to get user details including names and avatars
   const userIds = userRoles.map((ur) => ur.user_id);
-  const { data: userDetails, error: detailsError } = await supabase.rpc(
-    "get_user_details",
-    { user_ids: userIds },
-  );
-
-  let userMap: Record<string, any> = {};
-
-  if (!detailsError && userDetails) {
-    userDetails.forEach((user: any) => {
-      userMap[user.id] = user;
-    });
-  }
-
-  const admins = userRoles.map((ur) => {
-    const userDetail = userMap[ur.user_id];
-    return {
-      id: ur.user_id,
-      email:
-        userDetail?.email ||
-        (ur.user_id === currentUser.id
-          ? currentUser.email
-          : `Admin ${ur.user_id.slice(0, 8)}`),
-      full_name: userDetail?.full_name || "Unknown User",
-      avatar_url: userDetail?.avatar_url || null,
-    };
+  const { data: userDetails } = await supabase.rpc("get_user_details", {
+    user_ids: userIds,
   });
+
+  const admins = (userDetails || []).map((user: any) => ({
+    id: user.id,
+    email: user.email,
+    full_name: user.full_name,
+    avatar_url: user.avatar_url,
+  }));
 
   return NextResponse.json(admins);
 }
