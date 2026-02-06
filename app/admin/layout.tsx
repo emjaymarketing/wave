@@ -37,8 +37,8 @@ export default function AdminLayout({
         <Suspense>
           <AdminSidebar />
         </Suspense>
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">{children}</div>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="p-8 h-full">{children}</div>
         </main>
       </div>
       <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-4">

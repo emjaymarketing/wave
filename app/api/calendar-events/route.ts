@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
   const month = searchParams.get("month");
   const year = searchParams.get("year");
   const status = searchParams.get("status");
@@ -19,6 +20,10 @@ export async function GET(request: Request) {
     .from("calendar_events")
     .select("*")
     .order("due_date", { ascending: true });
+
+  if (id) {
+    query = query.eq("id", id);
+  }
 
   if (month && year) {
     const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);

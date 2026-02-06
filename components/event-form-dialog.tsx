@@ -30,6 +30,7 @@ interface EventFormDialogProps {
   selectedDate?: Date;
   admins: UserDetail[];
   clients: UserDetail[];
+  onDelete?: (id: string) => void;
 }
 
 export function EventFormDialog({
@@ -40,6 +41,7 @@ export function EventFormDialog({
   selectedDate,
   admins,
   clients,
+  onDelete,
 }: EventFormDialogProps) {
   const [formData, setFormData] = useState({
     task_name: "",
@@ -286,15 +288,28 @@ export function EventFormDialog({
             />
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">{event ? "Update" : "Create"} Event</Button>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <div>
+              {event && onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => onDelete(event.id)}
+                >
+                  Delete Event
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">{event ? "Update" : "Create"} Event</Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
